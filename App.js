@@ -1,15 +1,22 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { theme } from "./Colors";
 
 export default function App() {
   const [working, setWorking] = useState(true)
   const [text, setText] = useState("")
+  const [todos, setTodos] = useState({})
   const work = () => setWorking(true)
   const travel = () => setWorking(false)
   const onChangeText = (payload) => setText(payload);
-
+  const addTodo = () => {
+    if (text === "") return
+    const newTodos = { ...todos, [Date.now()]: { text, work: working } }
+    setTodos(newTodos)
+    console.log(todos);
+    setText("")
+  }
 
   return (
     <View style={styles.container}>
@@ -22,7 +29,13 @@ export default function App() {
           <Text style={{ ...styles.BtnText, color: !working ? "white" : theme.grey }}>여행</Text>
         </TouchableOpacity>
       </View>
-      <TextInput value={text} onChangeText={onChangeText} placeholder={working ? "무슨 일을 하고 싶으세요?" : "어디로 여행을 가고 싶으세요?"} style={styles.input} />
+      <TextInput onSubmitEditing={addTodo} value={text} onChangeText={onChangeText} placeholder={working ? "무슨 일을 하고 싶으세요?" : "어디로 여행을 가고 싶으세요?"} style={styles.input} />
+      <ScrollView>{Object.keys(todos).map(key =>
+        <View style={styles.todo} key={key}>
+          <Text style={styles.todoText}>
+            {todos[key].text}
+          </Text>
+        </View>)}</ScrollView>
     </View>
   );
 }
@@ -48,7 +61,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 30,
-    marginTop: 20,
+    marginVertical: 20,
     fontSize: 18
+  },
+  todo: {
+    backgroundColor: theme.todoBg,
+    marginVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderRadius: 15
+  },
+  todoText: {
+    color: "white",
+    fontSize: 16
   }
 });
