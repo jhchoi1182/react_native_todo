@@ -1,7 +1,11 @@
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { theme } from "./Colors";
+
+const STORAGE_KEY = "@todos"
 
 export default function App() {
   const [working, setWorking] = useState(true)
@@ -10,11 +14,26 @@ export default function App() {
   const work = () => setWorking(true)
   const travel = () => setWorking(false)
   const onChangeText = (payload) => setText(payload);
-  const addTodo = () => {
+  const saveTodos = async (toSave) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+    } catch (e) {
+      alert("저장에 실패했습니다.")
+    }
+  }
+  const loadTodos = async () => {
+    const data = await AsyncStorage.getItem(STORAGE_KEY)
+    setTodos(JSON.parse(data));
+
+  }
+  useEffect(() => {
+    loadTodos()
+  }, [])
+  const addTodo = async () => {
     if (text === "") return
-    const newTodos = { ...todos, [Date.now()]: { text, work: working } }
+    const newTodos = { ...todos, [Date.now()]: { text, working } }
     setTodos(newTodos)
-    console.log(todos);
+    await saveTodos(newTodos)
     setText("")
   }
 
@@ -31,11 +50,12 @@ export default function App() {
       </View>
       <TextInput onSubmitEditing={addTodo} value={text} onChangeText={onChangeText} placeholder={working ? "무슨 일을 하고 싶으세요?" : "어디로 여행을 가고 싶으세요?"} style={styles.input} />
       <ScrollView>{Object.keys(todos).map(key =>
-        <View style={styles.todo} key={key}>
-          <Text style={styles.todoText}>
-            {todos[key].text}
-          </Text>
-        </View>)}</ScrollView>
+        todos[key].working === working ?
+          <View style={styles.todo} key={key}>
+            <Text style={styles.todoText}>
+              {todos[key].text}
+            </Text>
+          </View> : null)}</ScrollView>
     </View>
   );
 }
